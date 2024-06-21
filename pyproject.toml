@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "MetaThreads"
+version = "2024.01.01"
+description = "Library for META Threads social network API"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Rob Wolfe", email = "rwolfe@justenoughtechnology.com" }]
+maintainers = [{ name = "Rob Wolfe", email = "rwolfe@justenoughtechnology.com" }]
+keywords = []
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dependencies = ["requests","python-dotenv"]
+
+[project.urls]
+Homepage = "https://edgar.portwallistechnologies.io"
+Documentation = "https://edgar.portwallistechnologies/docs"
+Repository = "https://github.com/Port-Wallis-Technologies/EDGAR.git"
+Changelog = "https://github.com/Port-Wallis-Technologies/EDGAR/blob/master/CHANGELOG.md"
