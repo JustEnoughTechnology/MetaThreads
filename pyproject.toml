@@ -21,7 +21,7 @@ classifiers = [
 dependencies = ["requests","python-dotenv"]
 
 [project.urls]
-Homepage = "https://edgar.portwallistechnologies.io"
+Homepage = "https://www.justenoughtechnology.com/projects/metathreads"
 Documentation = "https://edgar.portwallistechnologies/docs"
-Repository = "https://github.com/Port-Wallis-Technologies/EDGAR.git"
-Changelog = "https://github.com/Port-Wallis-Technologies/EDGAR/blob/master/CHANGELOG.md"
+Repository = "https://github.com/JustEnoughTechnology/JET-Threads.git"
+Changelog = "https://github.com/JustEnoughTechnology/JET-Threads/blob/master/CHANGELOG.md"
