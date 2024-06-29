@@ -1,4 +1,5 @@
 import dotenv
+import requests
 
 env_file = "env/metathreads.env"
 secret_file="secrets/metathreads.secret"
@@ -78,7 +79,12 @@ class ThreadsSesson:
                  grant_type:str="authorization_code", 
                  code: str = ""):
         try:
-            __redir
+            self.__client_id = client_id
+            self.__client_secret = client_secret
+            self.__grant_type = grant_type
+            self.__code = code
+            self.__scope = threads_scope
+            
         try:
             __token = self.get_token(code)
         except Exception as e:
@@ -86,4 +92,5 @@ class ThreadsSesson:
             __token = ""
 
     def get_token(self,code: str)->str:
-        pass
+        r = requests.post('')
+        
