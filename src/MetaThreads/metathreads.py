@@ -1,5 +1,10 @@
 import dotenv
-env_file = "metathreads.env"
+
+env_file = "env/metathreads.env"
+secret_file="secrets/metathreads.secret"
+
+dotenv.load_dotenv(env_file)
+
 threads_scope: dict = dict(
         threads_basic=True,
         threads_content_publish=True,
@@ -11,7 +16,6 @@ threads_scope: dict = dict(
 class MediaContainer:
     def __init__(self):
         pass
-
 
 
 def refresh_token(token: str)->str:
@@ -74,9 +78,12 @@ class ThreadsSesson:
                  grant_type:str="authorization_code", 
                  code: str = ""):
         try:
-            __token = get_token(code)
+            __redir
+        try:
+            __token = self.get_token(code)
         except Exception as e:
             print(e)
             __token = ""
+
     def get_token(self,code: str)->str:
         pass
