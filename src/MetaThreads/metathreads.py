@@ -1,19 +1,9 @@
 import dotenv
 import requests
+import os
 
-env_file = "env/metathreads.env"
-secret_file="secrets/metathreads.secret"
 
 dotenv.load_dotenv(env_file)
-
-threads_scope: dict = dict(
-        threads_basic=True,
-        threads_content_publish=True,
-        threads_manage_replies=True,
-        threads_read_replies=True,
-        threads_manage_insights=True
-    )
-
 class MediaContainer:
     def __init__(self):
         pass
@@ -46,51 +36,80 @@ class Conversation:
         pass
 
 class ThreadsSesson:
-    """_summary_
-    This class encapsulates one session
-    Variables:
-    __redirect_uri: str 
-        Not used in this version, simply for documentation
-    __base_url: str
-        Should be always set to "https://graph.threads.com"
-    __api_version: str
-        To complete the api path. May not be necessary
-    __api_url: str
-        Base+version
-    __auth_url: str
-        Where we have to get our code, this is not used by this library but it is here for documentation
-    __token : str
-        The token that we will use to authenticate our requests. It can be a long lived or short lived token. The API doesn't really care
-
-
-    """
     
-    __scope: 
- 
-    __redirect_uri = "https://localhost"
-    __base_url = "https://graph.threads.com"
-    __api_version = "v1"
-    __api_url = f"{__base_url}/{__api_version}"
-    __auth_url = "https://auth.threads.com"
-    __token = ""
-
-    def __init__(self, client_id:str, 
-                 client_secret:str,
-                 grant_type:str="authorization_code", 
-                 code: str = ""):
-        try:
-            self.__client_id = client_id
-            self.__client_secret = client_secret
-            self.__grant_type = grant_type
-            self.__code = code
-            self.__scope = threads_scope
-            
-        try:
-            __token = self.get_token(code)
-        except Exception as e:
-            print(e)
-            __token = ""
-
-    def get_token(self,code: str)->str:
-        r = requests.post('')
+    
+    def __init__(self, 
+                 client_id:str=None , 
+                 client_secret:str=None,
+                 code: str =None,
+                 token:str=None,
+                 token_length:str=None,
+                 env_file:str="env/metathreads.env",
+                 secret_file:str="secrets/metathreads.secret",
+                 base_url:str="https://graph.threads.net",
+                 api_version:str="v1"):
         
+        self.api_url = f"{base_url}/{api_version}"       
+        
+        dotenv.load_dotenv(env_file)
+        
+        dotenv.load_dotenv(secret_file)
+
+        self.auth_url = "https://auth.threads.net"
+        
+        self.redirect_uri: str = os.getenv('REDIRECT_URI'),
+        
+
+        if client_id == "" : 
+            self.client_id = os.getenv('CLIENT_ID')
+        else : 
+            self.client_id = client_id
+        
+        if self.client_id == None:
+            raise ValueError("CLIENT_ID not provided and not found in environment variables")
+
+        if client_secret == "" : 
+            self.client_secret = os.getenv('CLIENT_SECRET')
+        else :
+            self.client_secret = client_secret
+
+        if self.client_secret == None:
+            raise ValueError("CLIENT_SECRET not provided and not found in environment variables")
+            
+        if code != "":
+            self.code = code
+        else:
+            raise ValueError("Authorization Code not provided")
+        
+        if token != None:
+            self.token = token
+            if token_length != None:
+                self.token_length = token_length
+            else:
+                self.token_length = 
+        try:
+            self.token = self.get_token(code)
+        except ValueError as e:
+            raise ValueError(e)
+        except Exception as e:
+            raise ValueError("Internal Error"+ e    )
+            
+    def get_token(self,code: str):
+        parms  = {'client_id': self.client_id,
+                  'client_secret': self.client_secret,
+                  'code': code,
+                  'grant':'authorization_code',
+                  'redirect_uri': self.redirect_uri}
+        
+        r = requests.post(f'{self.__base_url}/oauth/access_token',params=parms) 
+        self.token = r.json()['access_token']
+        
+    def get_token(self,code: str)->str:
+        parms  = {'client_id': self.client_id,
+                  'client_secret': self.client_secret,
+                  'code': code,
+                  'grant':'authorization_code',
+                  'redirect_uri': self.redirect_uri}
+        
+        r = requests.post(f'{self.__base_url}/oauth/access_token',params=parms) 
+            
