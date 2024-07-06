@@ -2,12 +2,9 @@ import dotenv
 import requests
 import os
 
-
-dotenv.load_dotenv(env_file)
 class MediaContainer:
     def __init__(self):
         pass
-
 
 def refresh_token(token: str)->str:
     pass
@@ -36,8 +33,7 @@ class Conversation:
         pass
 
 class ThreadsSesson:
-    
-    
+     
     def __init__(self, 
                  client_id:str=None , 
                  client_secret:str=None,
