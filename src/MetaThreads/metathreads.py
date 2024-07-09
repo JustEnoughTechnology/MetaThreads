@@ -18,10 +18,11 @@ class ThreadsAPI:
     def __init__(
         self, base_url: str = "https://graph.threads.net", api_version: str = "v1.0"
     ):
-        """_summary_
+        """
+        mainly makes sure that the api url is correct. Makes it possible to create more than one API instance in one module
 
         Args:
-            base_url (_type_, optional): _description_. Defaults to "https://graph.threads.net".
+            base_url (str, optional): _description_. Defaults to "https://graph.threads.net".
             api_version (str, optional): _description_. Defaults to "v1.0".
         """
         self.api_url = f"{base_url}/{api_version}"
@@ -34,13 +35,18 @@ class ThreadsAPI:
     ) -> dict:
         """_summary_
 
-        Args:
-            userid (str, optional): _description_. Defaults to "me".
-            fields (str, optional): _description_. Defaults to "id,username,threads_profile_picture_url,threads_biography".
-            token (str, optional): _description_. Defaults to None.
+                Args:
+                    userid (str, optional): _description_. Defaults to "me".
+                    fields (str, optional): _description_. Defaults to "id,username,threads_profile_picture_url,threads_biography".
+                    token (str, optional): _description_. Defaults to None.
 
-        Returns:
-            dict: _description_
+                Returns:
+                    dict: {
+                        "id": "1234567",
+                        "username": "threadsapitestuser",
+                        "threads_profile_picture_url": "https://scontent-sjc3-1.cdninstagram.com/link/to/profile/picture/on/threads/",
+                        "threads_biography": "This is my Threads bio."
+        }
         """
         response: requests.Response = requests.get(
             f"{self.api_url}/{userid}",
@@ -50,7 +56,9 @@ class ThreadsAPI:
         if response.status_code == 200:
             return response.json()
         else:
-            return {"status_code": response.status_code, "reason": response.reason}
+            raise RuntimeError(
+                {"status_code": response.status_code, "reason": response.reason}
+            )
 
     def get_threads_publishing_limit(
         self, userid: str = "me", token: str = None
@@ -114,7 +122,7 @@ class ThreadsAPI:
             redirect_uri (str): _description_
 
         Raises:
-            ValueError: _description_
+            RuntimeError: _description_
 
         Returns:
             dict: _description_
@@ -129,7 +137,7 @@ class ThreadsAPI:
 
         r = requests.post(f"{self.api_url}/oauth/access_token", params=parms)
         if r.status_code != 200:
-            raise ValueError("Invalid Authorization Code")
+            raise RuntimeError("Invalid Authorization Code")
         else:
             return r.json()
 
@@ -141,7 +149,7 @@ class ThreadsAPI:
             client_secret (str): _description_
 
         Raises:
-            ValueError: _description_
+            RuntimeError: _description_
 
         Returns:
             dict: _description_
@@ -154,13 +162,87 @@ class ThreadsAPI:
 
         r = requests.post(f"{self.api_url}/oauth/access_token", params=parms)
         if r.status_code != 200:
-            raise ValueError("Invalid Authorization Code")
+            raise RuntimeError("Invalid Authorization Code")
         else:
             return r.json()
 
-    def refresh_token(self, access_token: str) -> str:
-        pass
+    def refresh_token(self, long_lived_access_token: str) -> dict:
+        """_summary_
 
+        Args:
+            long_lived_access_token (str): _description_
+
+        Raises:
+            RuntimeError: _description_
+
+        Returns:
+            dict: {
+                "access_token": "<LONG_LIVED_USER_ACCESS_TOKEN>",
+                "token_type": "bearer",
+                "expires_in": 5183944 // number of seconds until token expires
+                }
+        """
+        parms = {
+            "grant_type": "th_refresh_token",
+            "access_token": long_lived_access_token,
+        }
+
+        r = requests.post(f"{self.api_url}/refresh_access_token", params=parms)
+        if r.status_code != 200:
+            raise RuntimeError("Failed to Refresh Token")
+        else:
+            return r.json()
+
+    def get_user_insights(
+        self,
+        userid: str = "me",
+        since: str = None,
+        until: str = None,
+        metric: str = "follower_demographics,followers_count,quotes,reposts,replies,likes,views",
+        breakdown: str = None,
+        access_token: str = None,
+    ) -> dict:
+        """_summary_
+
+        Args:
+            userid (str, optional): _description_. Defaults to "me".
+            since (str, optional): _description_. Defaults to None.
+            until (str, optional): _description_. Defaults to None.
+            metric (str, optional): _description_. Defaults to "follower_demographics,followers_count,quotes,reposts,replies,likes,views".
+            breakdown (str, optional): _description_. Defaults to None. Value must be one of "country", "city", "age", "gender"
+            access_token (str, optional): _description_. Defaults to None.
+
+        Raises:
+            RuntimeError: _description_
+
+        Returns:
+            dict: _description_
+        """
+
+        parms = {"metric": metric}
+        if since != None:
+            parms["since"] = since
+
+        if until != None:
+            parms["until"] = until
+
+        if metric.find("follower_demographics") != -1:
+            if breakdown != None:
+                parms["breakdown"] = breakdown
+            else: 
+                raise RuntimeError("Breakdown must be provided for follower_demographics")                                   
+
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{userid}/threads_insights",
+            params=parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise RuntimeError(
+                {"status_code": response.status_code, "reason": response.reason}
+            )
 
 
 class Conversation:
@@ -180,7 +262,7 @@ class ThreadsSesson:
         env_file: str = "env/metathreads.env",
         secret_file: str = "secrets/metathreads.secret",
         base_url: str = "https://graph.threads.net",
-        api_version: str = "v1",
+        api_version: str = "v1.0",
     ):
 
         self.api_url = f"{base_url}/{api_version}"
@@ -199,7 +281,7 @@ class ThreadsSesson:
             self.client_id = client_id
 
         if self.client_id == None:
-            raise ValueError(
+            raise RuntimeError(
                 "CLIENT_ID not provided and not found in environment variables"
             )
 
@@ -209,14 +291,14 @@ class ThreadsSesson:
             self.client_secret = client_secret
 
         if self.client_secret == None:
-            raise ValueError(
+            raise RuntimeError(
                 "CLIENT_SECRET not provided and not found in environment variables"
             )
 
         if code != "":
             self.code = code
         else:
-            raise ValueError("Authorization Code not provided")
+            raise RuntimeError("Authorization Code not provided")
 
         if token != None:
             self.token = token
@@ -226,17 +308,18 @@ class ThreadsSesson:
                 self.token_length = 0
         try:
             self.token = self.get_token(code)
-        except ValueError as e:
-            raise ValueError(e)
+        except RuntimeError as e:
+            raise RuntimeError(e)
         except Exception as e:
-            raise ValueError("Internal Error" + e)
+            raise RuntimeError("Internal Error" + e)
 
 
 if __name__ == "__main__":
     s: ThreadsAPI = ThreadsAPI()
     print(
-        s.get_replies_publishing_limit(
-            "me",
-            "THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
+        s.get_user_insights(
+            breakdown= "age,gender",
+            since="1712991601",
+            access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
         )
     )
