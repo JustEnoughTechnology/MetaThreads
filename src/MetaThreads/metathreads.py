@@ -2,23 +2,40 @@ import dotenv
 import requests
 import os
 
-
 class MediaContainer:
     def __init__(self):
         pass
 
+class Metrics:
+    """_summary_
+    """
+    follower_demographics =  "follower_demographics"
+    followers_count = "followers_count"
+    quotes = "quotes"
+    reposts = "reposts"
+    replies = "replies"
+    likes = "likes"
+    views = "views"
+    age = "age"
+    city = "city"
+    country = "country"
+    gender = "gender"
+
+class Permissions:
+    """_summary_
+    """
+    threads_basic = "threads_basic"
+    threads_content_publish = "threads_content_publish"
+    threads_manage_replies = "threads_manage_replies"
+    threads_read_replies = "threads_read_replies"
+    threads_manage_insights = "threads_manage_insights" 
 
 class ThreadsAPI:
-    auth_threads_basic = "threads_basic"
-    auth_threads_content_publish = "threads_content_publish"
-    auth_threads_manage_replies = "threads_manage_replies"
-    auth_threads_read_replies = "threads_read_replies"
-    auth_threads_manage_insights = "threads_manage_insights"
-
+    
     def __init__(
         self, base_url: str = "https://graph.threads.net", api_version: str = "v1.0"
     ):
-        """
+        """ _summary_
         mainly makes sure that the api url is correct. Makes it possible to create more than one API instance in one module
 
         Args:
@@ -235,7 +252,7 @@ class ThreadsAPI:
         response: requests.Response = requests.get(
             f"{self.api_url}/{userid}/threads_insights",
             params=parms,
-            headers={"Authorization": "Bearer " + access_token},
+            headers={"Authorization": "Bearer " + access_token}
         )
         if response.status_code == 200:
             return response.json()
@@ -244,7 +261,37 @@ class ThreadsAPI:
                 {"status_code": response.status_code, "reason": response.reason}
             )
 
+    def get_post_insights( self, 
+                          media_id:str = None,
+                          metric:str="views,likes,replies,reposts,quotes",
+                          access_token:str=None, 
+                          ) -> dict:          
+        """_summary_
 
+        Args:
+            media_id (str, optional): _description_. Defaults to None.
+            metric (str, optional): _description_. Defaults to "views,likes,replies,reposts,quotes".
+            access_token (str, optional): _description_. Defaults to None.
+
+        Returns:
+            dict: _description_
+        """
+        if media_id == None:
+            raise RuntimeError("media_id must be provided")
+        
+        parms = {"metric": metric}
+
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{media_id}/insights",
+            params=parms,
+            headers = {"Authorization": "Bearer " + access_token})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise RuntimeError(
+                {"status_code": response.status_code, "reason": response.reason}
+            )
+        
 class Conversation:
     def __init__(self):
         pass
