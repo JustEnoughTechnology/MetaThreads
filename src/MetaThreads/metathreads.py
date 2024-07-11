@@ -300,7 +300,79 @@ class ThreadsAPI:
                 {"status_code": response.status_code, "reason": response.reason}
             )
 
+    def get_user_threads(
+        self,
+        threads_user_id: str = "me",
+        fields: str = "*",
+        since:str=None,
+        until:str=None,
+        limit:int=25,
+        before:str=None,
+        after:str=None,
+        access_token: str = None,
+    ):
+        
+        parms:dict ={   }
+        
+        if fields == "*":
+            parms["fields"] =  "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,reply_audience"   
+        else:
+            parms["fields"] = fields
+            
+        if since != None:
+            parms["since"] = since
+        if until != None:
+            parms["until"] = until
+        if limit != None:
+            parms["limit"] = limit  
+        if before != None:
+            parms["before"] = before
+        if after != None:
+            parms["after"] = after
 
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
+
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_user_id}/threads",
+            params=parms,
+            headers={"Authorization": "Bearer " + access_token}
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise RuntimeError(
+                {"status_code": response.status_code, "reason": response.reason}
+            )
+
+    def get_thread(self,threads_media_id:str = None,access_token:str = None,fields:str = "*"):
+        
+        parms:dict = {}
+        
+        if threads_media_id == None:
+            raise RuntimeError("media_id must be provided")
+        
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
+
+        if fields == "*":
+            parms["fields"] = "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,is_reply_owned_by_me,root_post,replied_to,hide_status,reply_audience"
+        else:
+            parms["fields"] = fields
+            
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_media_id}",
+            params=parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise RuntimeError(
+                {"status_code": response.status_code, "reason": response.reason}
+            )
+    
 class Conversation:
     def __init__(self):
         pass
@@ -372,10 +444,8 @@ class ThreadsSesson:
 
 if __name__ == "__main__":
     s: ThreadsAPI = ThreadsAPI()
-    print(
-        s.get_user_insights(
-            breakdown="age,gender",
-            since="1712991601",
+    
+    t = s.get_threads(limit=100, since="2024-07-11",fields="id,timestamp,media_type,is_quote_post,has_replies,children",
             access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
         )
-    )
+    print(t)
