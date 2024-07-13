@@ -84,15 +84,6 @@ class ThreadsAPI:
     def get_threads_publishing_limit(
         self, userid: str = "me", token: str = None
     ) -> dict:
-        """_summary_
-
-        Args:
-            userid (str, optional): _description_. Defaults to "me".
-            token (str, optional): _description_. Defaults to None.
-
-        Returns:
-            dict: _description_
-        """
         response: requests.Response = requests.get(
             f"{self.api_url}/{userid}/threads_publishing_limit",
             params={"fields": "quota_usage,config"},
@@ -372,7 +363,56 @@ class ThreadsAPI:
             raise RuntimeError(
                 {"status_code": response.status_code, "reason": response.reason}
             )
-    
+    def create_media_container():
+        pass
+    def publish_media_container():
+        pass
+    def get_replies(self,threads_media_id:str = None,access_token:str = None,fields:str = "*",reverse:bool = True):
+        
+        self.parms = {}
+        
+        if threads_media_id == None:
+            raise RuntimeError("media_id must be provided")
+        
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
+        
+        if fields == "*":
+            self.parms["fields"] = "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
+        else :
+            self.parms["fields"] = fields
+        
+        self.parms["reverse"] = reverse
+                    
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_media_id}/replies",
+            params=self.parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
+        
+        
+    def get_conversation(self,threads_media_id:str = None,access_token:str = None,fields:str = "*",reverse:bool = True):
+        
+        self.parms = {}
+        
+        if threads_media_id == None:
+            raise RuntimeError("media_id must be provided")
+        
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
+        
+        if fields == "*":
+            self.parms["fields"] = "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
+        else :
+            self.parms["fields"] = fields
+            
+        self.parms["reverse"] = reverse
+        
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_media_id}/replies",
+            params=self.parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
 class Conversation:
     def __init__(self):
         pass
@@ -445,7 +485,7 @@ class ThreadsSesson:
 if __name__ == "__main__":
     s: ThreadsAPI = ThreadsAPI()
     
-    t = s.get_threads(limit=100, since="2024-07-11",fields="id,timestamp,media_type,is_quote_post,has_replies,children",
+    t = s.get_user_threads(limit=100, since="2024-07-10",fields="id,timestamp,media_type,is_quote_post,has_replies,children",
             access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
         )
     print(t)
