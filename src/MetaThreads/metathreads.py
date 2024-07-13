@@ -101,7 +101,8 @@ class ThreadsAPI:
         if response.status_code == 200:
             return response.json()
         else:
-            return {"status_code": response.status_code, "reason": response.reason}
+            return {"status_code": response.status_code, 
+                    "reason": response.reason}
 
     def get_replies_publishing_limit(
         self, userid: str = "me", token: str = None
