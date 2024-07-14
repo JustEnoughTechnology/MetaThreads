@@ -2,11 +2,76 @@ import dotenv
 import requests
 import os
 
+class ThreadsSesson:
+
+    def __init__(
+        self,
+        client_id: str = None,
+        client_secret: str = None,
+        code: str = None,
+        token: str = None,
+        token_length: str = None,
+        env_file: str = "env/metathreads.env",
+        secret_file: str = "secrets/metathreads.secret",
+        base_url: str = "https://graph.threads.net",
+        api_version: str = "v1.0",
+    ):
+
+        self.api_url = f"{base_url}/{api_version}"
+
+        dotenv.load_dotenv(env_file)
+
+        dotenv.load_dotenv(secret_file)
+
+        self.auth_url = "https://auth.threads.net"
+
+        self.redirect_uri: str = (os.getenv("REDIRECT_URI"),)
+
+        if client_id == "":
+            self.client_id = os.getenv("CLIENT_ID")
+        else:
+            self.client_id = client_id
+
+        if self.client_id == None:
+            raise RuntimeError(
+                "CLIENT_ID not provided and not found in environment variables"
+            )
+
+        if client_secret == "":
+            self.client_secret = os.getenv("CLIENT_SECRET")
+        else:
+            self.client_secret = client_secret
+
+        if self.client_secret == None:
+            raise RuntimeError(
+                "CLIENT_SECRET not provided and not found in environment variables"
+            )
+
+        if code != "":
+            self.code = code
+        else:
+            raise RuntimeError("Authorization Code not provided")
+
+        if token != None:
+            self.token = token
+            if token_length != None:
+                self.token_length = token_length
+            else:
+                self.token_length = 0
+        try:
+            self.token = self.get_token(code)
+        except RuntimeError as e:
+            raise RuntimeError(e)
+        except Exception as e:
+            raise RuntimeError("Internal Error" + e)
 
 class MediaContainer:
     def __init__(self):
         pass
 
+class Conversation:
+    def __init__(self):
+        pass
 
 class Metrics:
     """_summary_"""
@@ -23,7 +88,6 @@ class Metrics:
     country = "country"
     gender = "gender"
 
-
 class Permissions:
     """_summary_"""
 
@@ -32,7 +96,6 @@ class Permissions:
     threads_manage_replies = "threads_manage_replies"
     threads_read_replies = "threads_read_replies"
     threads_manage_insights = "threads_manage_insights"
-
 
 class ThreadsAPI:
 
@@ -92,8 +155,7 @@ class ThreadsAPI:
         if response.status_code == 200:
             return response.json()
         else:
-            return {"status_code": response.status_code, 
-                    "reason": response.reason}
+            return {"status_code": response.status_code, "reason": response.reason}
 
     def get_replies_publishing_limit(
         self, userid: str = "me", token: str = None
@@ -296,27 +358,29 @@ class ThreadsAPI:
         self,
         threads_user_id: str = "me",
         fields: str = "*",
-        since:str=None,
-        until:str=None,
-        limit:int=25,
-        before:str=None,
-        after:str=None,
+        since: str = None,
+        until: str = None,
+        limit: int = 25,
+        before: str = None,
+        after: str = None,
         access_token: str = None,
     ):
-        
-        parms:dict ={   }
-        
+
+        parms: dict = {}
+
         if fields == "*":
-            parms["fields"] =  "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,reply_audience"   
+            parms["fields"] = (
+                "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,reply_audience"
+            )
         else:
             parms["fields"] = fields
-            
+
         if since != None:
             parms["since"] = since
         if until != None:
             parms["until"] = until
         if limit != None:
-            parms["limit"] = limit  
+            parms["limit"] = limit
         if before != None:
             parms["before"] = before
         if after != None:
@@ -328,9 +392,9 @@ class ThreadsAPI:
         response: requests.Response = requests.get(
             f"{self.api_url}/{threads_user_id}/threads",
             params=parms,
-            headers={"Authorization": "Bearer " + access_token}
+            headers={"Authorization": "Bearer " + access_token},
         )
-        
+
         if response.status_code == 200:
             return response.json()
         else:
@@ -338,21 +402,25 @@ class ThreadsAPI:
                 {"status_code": response.status_code, "reason": response.reason}
             )
 
-    def get_thread(self,threads_media_id:str = None,access_token:str = None,fields:str = "*"):
-        
-        parms:dict = {}
-        
+    def get_thread(
+        self, threads_media_id: str = None, access_token: str = None, fields: str = "*"
+    ):
+
+        parms: dict = {}
+
         if threads_media_id == None:
             raise RuntimeError("media_id must be provided")
-        
+
         if access_token == None:
             raise RuntimeError("Access Token is required")
 
         if fields == "*":
-            parms["fields"] = "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,is_reply_owned_by_me,root_post,replied_to,hide_status,reply_audience"
+            parms["fields"] = (
+                "id,media_product_type,media_type,media_url,permalink,owner,username,text,timestamp,shortcode,thumbnail_url,children,is_quote_post,has_replies,is_reply_owned_by_me,root_post,replied_to,hide_status,reply_audience"
+            )
         else:
             parms["fields"] = fields
-            
+
         response: requests.Response = requests.get(
             f"{self.api_url}/{threads_media_id}",
             params=parms,
@@ -364,129 +432,91 @@ class ThreadsAPI:
             raise RuntimeError(
                 {"status_code": response.status_code, "reason": response.reason}
             )
+
     def create_media_container():
         pass
+
     def publish_media_container():
         pass
-    def get_replies(self,threads_media_id:str = None,access_token:str = None,fields:str = "*",reverse:bool = True):
-        
-        self.parms = {}
-        
-        if threads_media_id == None:
-            raise RuntimeError("media_id must be provided")
-        
-        if access_token == None:
-            raise RuntimeError("Access Token is required")
-        
-        if fields == "*":
-            self.parms["fields"] = "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
-        else :
-            self.parms["fields"] = fields
-        
-        self.parms["reverse"] = reverse
-                    
-        response: requests.Response = requests.get(
-            f"{self.api_url}/{threads_media_id}/replies",
-            params=self.parms,
-            headers={"Authorization": "Bearer " + access_token},
-        )
-        
-        
-    def get_conversation(self,threads_media_id:str = None,access_token:str = None,fields:str = "*",reverse:bool = True):
-        
-        self.parms = {}
-        
-        if threads_media_id == None:
-            raise RuntimeError("media_id must be provided")
-        
-        if access_token == None:
-            raise RuntimeError("Access Token is required")
-        
-        if fields == "*":
-            self.parms["fields"] = "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
-        else :
-            self.parms["fields"] = fields
-            
-        self.parms["reverse"] = reverse
-        
-        response: requests.Response = requests.get(
-            f"{self.api_url}/{threads_media_id}/replies",
-            params=self.parms,
-            headers={"Authorization": "Bearer " + access_token},
-        )
-class Conversation:
-    def __init__(self):
-        pass
 
-
-class ThreadsSesson:
-
-    def __init__(
+    def get_replies(
         self,
-        client_id: str = None,
-        client_secret: str = None,
-        code: str = None,
-        token: str = None,
-        token_length: str = None,
-        env_file: str = "env/metathreads.env",
-        secret_file: str = "secrets/metathreads.secret",
-        base_url: str = "https://graph.threads.net",
-        api_version: str = "v1.0",
+        threads_media_id: str = None,
+        access_token: str = None,
+        fields: str = "*",
+        reverse: bool = True,
+        before: str = None,
+        after: str = None,
     ):
 
-        self.api_url = f"{base_url}/{api_version}"
+        self.parms = {}
 
-        dotenv.load_dotenv(env_file)
+        if threads_media_id == None:
+            raise RuntimeError("media_id must be provided")
 
-        dotenv.load_dotenv(secret_file)
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
 
-        self.auth_url = "https://auth.threads.net"
-
-        self.redirect_uri: str = (os.getenv("REDIRECT_URI"),)
-
-        if client_id == "":
-            self.client_id = os.getenv("CLIENT_ID")
-        else:
-            self.client_id = client_id
-
-        if self.client_id == None:
-            raise RuntimeError(
-                "CLIENT_ID not provided and not found in environment variables"
+        if fields == "*":
+            self.parms["fields"] = (
+                "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
             )
-
-        if client_secret == "":
-            self.client_secret = os.getenv("CLIENT_SECRET")
         else:
-            self.client_secret = client_secret
+            self.parms["fields"] = fields
 
-        if self.client_secret == None:
-            raise RuntimeError(
-                "CLIENT_SECRET not provided and not found in environment variables"
+        self.parms["reverse"] = reverse
+
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_media_id}/replies",
+            params=self.parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
+
+    def get_conversation(
+        self,
+        threads_media_id: str = None,
+        access_token: str = None,
+        fields: str = "*",
+        reverse: bool = True,
+        before: str = None,
+        after: str = None,
+    ):
+
+        self.parms = {}
+
+        if threads_media_id == None:
+            raise RuntimeError("media_id must be provided")
+
+        if access_token == None:
+            raise RuntimeError("Access Token is required")
+
+        if fields == "*":
+            self.parms["fields"] = (
+                "id,text,username,permalink,timestamp,media_product_type,media_type,media_url,shortcode,thumbnail_url,children,is_quote_post,has_replies,root_post,replied_to,is_replay,is_reply_owned_by_me,hide_status,reply_audience"
             )
-
-        if code != "":
-            self.code = code
         else:
-            raise RuntimeError("Authorization Code not provided")
+            self.parms["fields"] = fields
 
-        if token != None:
-            self.token = token
-            if token_length != None:
-                self.token_length = token_length
-            else:
-                self.token_length = 0
-        try:
-            self.token = self.get_token(code)
-        except RuntimeError as e:
-            raise RuntimeError(e)
-        except Exception as e:
-            raise RuntimeError("Internal Error" + e)
+        self.parms["reverse"] = reverse
 
+        response: requests.Response = requests.get(
+            f"{self.api_url}/{threads_media_id}/replies",
+            params=self.parms,
+            headers={"Authorization": "Bearer " + access_token},
+        )
+
+    def manage_reply(
+        self, threads_reply_id: str = None, hide: bool = None, access_token: str = None
+    ):
+        pass
 
 if __name__ == "__main__":
     s: ThreadsAPI = ThreadsAPI()
-    
-    t = s.get_user_threads(limit=100, since="2024-07-10",fields="id,timestamp,media_type,is_quote_post,has_replies,children",
-            access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
-        )
+
+    t = s.get_user_threads(
+        limit=100,
+        since="2024-07-10",
+        fields="id,timestamp,media_type,is_quote_post,has_replies,children",
+        access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
+    )
     print(t)
