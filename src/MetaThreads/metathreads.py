@@ -2,105 +2,14 @@ import dotenv
 import requests
 import os
 
-class ThreadsSesson:
-
-    def __init__(
-        self,
-        client_id: str = None,
-        client_secret: str = None,
-        code: str = None,
-        token: str = None,
-        token_length: str = None,
-        env_file: str = "env/metathreads.env",
-        secret_file: str = "secrets/metathreads.secret",
-        base_url: str = "https://graph.threads.net",
-        api_version: str = "v1.0",
-    ):
-
-        self.api_url = f"{base_url}/{api_version}"
-
-        dotenv.load_dotenv(env_file)
-
-        dotenv.load_dotenv(secret_file)
-
-        self.auth_url = "https://auth.threads.net"
-
-        self.redirect_uri: str = (os.getenv("REDIRECT_URI"),)
-
-        if client_id == "":
-            self.client_id = os.getenv("CLIENT_ID")
-        else:
-            self.client_id = client_id
-
-        if self.client_id == None:
-            raise RuntimeError(
-                "CLIENT_ID not provided and not found in environment variables"
-            )
-
-        if client_secret == "":
-            self.client_secret = os.getenv("CLIENT_SECRET")
-        else:
-            self.client_secret = client_secret
-
-        if self.client_secret == None:
-            raise RuntimeError(
-                "CLIENT_SECRET not provided and not found in environment variables"
-            )
-
-        if code != "":
-            self.code = code
-        else:
-            raise RuntimeError("Authorization Code not provided")
-
-        if token != None:
-            self.token = token
-            if token_length != None:
-                self.token_length = token_length
-            else:
-                self.token_length = 0
-        try:
-            self.token = self.get_token(code)
-        except RuntimeError as e:
-            raise RuntimeError(e)
-        except Exception as e:
-            raise RuntimeError("Internal Error" + e)
-
 class MediaContainer:
     def __init__(self):
         pass
 
-class Conversation:
-    def __init__(self):
-        pass
-
-class Metrics:
-    """_summary_"""
-
-    follower_demographics = "follower_demographics"
-    followers_count = "followers_count"
-    quotes = "quotes"
-    reposts = "reposts"
-    replies = "replies"
-    likes = "likes"
-    views = "views"
-    age = "age"
-    city = "city"
-    country = "country"
-    gender = "gender"
-
-class Permissions:
-    """_summary_"""
-
-    threads_basic = "threads_basic"
-    threads_content_publish = "threads_content_publish"
-    threads_manage_replies = "threads_manage_replies"
-    threads_read_replies = "threads_read_replies"
-    threads_manage_insights = "threads_manage_insights"
-
 class ThreadsAPI:
 
     def __init__(
-        self, base_url: str = "https://graph.threads.net", api_version: str = "v1.0"
+        self,base_url: str = "https://graph.threads.net", api_version: str = "v1.0"
     ):
         """_summary_
         mainly makes sure that the api url is correct. Makes it possible to create more than one API instance in one module
@@ -111,7 +20,7 @@ class ThreadsAPI:
         """
         self.api_url = f"{base_url}/{api_version}"
 
-    def get_profile(
+    def get_user_profile(
         self,
         userid: str = "me",
         fields: str = "id,username,threads_profile_picture_url,threads_biography",
@@ -141,7 +50,7 @@ class ThreadsAPI:
             return response.json()
         else:
             raise RuntimeError(
-                {"status_code": response.status_code, "reason": response.reason}
+                {"status_code": response.status_code, "reason": response.reason,"URL":response.url}
             )
 
     def get_threads_publishing_limit(
@@ -178,12 +87,6 @@ class ThreadsAPI:
             return response.json()
         else:
             return {"status_code": response.status_code, "reason": response.reason}
-
-    def create_thread(self) -> MediaContainer:
-        pass
-
-    def threads_publish(self):
-        pass
 
     def get_token(
         self, client_id: str, client_secret: str, code: str, redirect_uri: str
@@ -509,14 +412,149 @@ class ThreadsAPI:
         self, threads_reply_id: str = None, hide: bool = None, access_token: str = None
     ):
         pass
+    def reply_control( self,  reply_id:str=None,reply_control:str=None,access_token:str=None):
+        pass
+    def create_carousel_container():
+        pass
+    
+    def create_item_container():
+        pass
+    
+    def publish_reply():
+        pass
+    
+    def publish_thread(self,threads_user_id:str=None,media_container_id:str=None,access_token:str=None):
+        pass
+    
+class ThreadsUser(dict):
+    def __init__(self,threads_user_id:str="me",threads_access_token:str=None):
+        super().__init__()
+        
+        self.__setitem__("threads_user_id", threads_user_id)
+        self.__setitem__("threads_access_token", threads_access_token)
+        self.__setitem__("username", None)
+        self.__setitem__("threads_profile_picture_url", None)
+        self.__setitem__("threads_biography", None)
+        self.__setitem__("threads_followers_count", None)
+        self.__setitem__("threads_following_count", None)
+        self.__setitem__("threads_media_count", None)
+        self.__setitem__("API", ThreadsAPI())
+                         
+        
+    def get_profile(self):
+        p = self.__getitem__("API").get_user_profile(self.__getitem__("threads_user_id"),token=self.__getitem__("threads_access_token"))
+        self.update(p)
+        self.__setitem__("threads_user_id", p["id"])
+        self.__delitem__("id")
+        return None
+
+class CarouselContainer:    
+    def __init__(self):
+        pass
+
+class ThreadsSesson:
+
+    def __init__(
+        self,
+        client_id: str = None,
+        client_secret: str = None,
+        code: str = None,
+        token: str = None,
+        token_length: str = None,
+        env_file: str = "env/metathreads.env",
+        secret_file: str = "secrets/metathreads.secret",
+        base_url: str = "https://graph.threads.net",
+        api_version: str = "v1.0",
+    ):
+
+        self.api_url = f"{base_url}/{api_version}"
+
+        dotenv.load_dotenv(env_file)
+
+        dotenv.load_dotenv(secret_file)
+
+        self.auth_url = "https://auth.threads.net"
+
+        self.redirect_uri: str = (os.getenv("REDIRECT_URI"),)
+
+        if client_id == "":
+            self.client_id = os.getenv("CLIENT_ID")
+        else:
+            self.client_id = client_id
+
+        if self.client_id == None:
+            raise RuntimeError(
+                "CLIENT_ID not provided and not found in environment variables"
+            )
+
+        if client_secret == "":
+            self.client_secret = os.getenv("CLIENT_SECRET")
+        else:
+            self.client_secret = client_secret
+
+        if self.client_secret == None:
+            raise RuntimeError(
+                "CLIENT_SECRET not provided and not found in environment variables"
+            )
+
+        if code != "":
+            self.code = code
+        else:
+            raise RuntimeError("Authorization Code not provided")
+
+        if token != None:
+            self.token = token
+            if token_length != None:
+                self.token_length = token_length
+            else:
+                self.token_length = 0
+        try:
+            self.token = self.get_token(code)
+        except RuntimeError as e:
+            raise RuntimeError(e)
+        except Exception as e:
+            raise RuntimeError("Internal Error" + e)
+
+class ItemContainer:
+    def __init__(self):
+        pass
+class Conversation:
+    def __init__(self):
+        pass
+
+class Replies: 
+    def __init__(self):
+        pass
+    
+class Metrics:
+    """_summary_"""
+
+    follower_demographics = "follower_demographics"
+    followers_count = "followers_count"
+    quotes = "quotes"
+    reposts = "reposts"
+    replies = "replies"
+    likes = "likes"
+    views = "views"
+    age = "age"
+    city = "city"
+    country = "country"
+    gender = "gender"
+
+class Permissions:
+    """_summary_"""
+
+    threads_basic = "threads_basic"
+    threads_content_publish = "threads_content_publish"
+    threads_manage_replies = "threads_manage_replies"
+    threads_read_replies = "threads_read_replies"
+    threads_manage_insights = "threads_manage_insights"
+
 
 if __name__ == "__main__":
     s: ThreadsAPI = ThreadsAPI()
-
-    t = s.get_user_threads(
-        limit=100,
-        since="2024-07-10",
-        fields="id,timestamp,media_type,is_quote_post,has_replies,children",
-        access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD",
-    )
-    print(t)
+    pr:ThreadsUser = ThreadsUser(threads_access_token="THQWJYRG01ZAFBNMGxJaFJFOXM3c1FWMkppdVJMVlBQQ2luUFNpNmdrTW1OQmJmdEN6N21qUTlSZA01oWXdXekpESVN0MkU1MFpVOVR2bW15THIyRXhmbEJMR0JVS1hxOEZAtcU5IZAG13SXp5eXVHU1BpTTlWLXhiU2s3WkEZD")
+    
+    pr.get_profile()
+    
+    print (pr.keys())
